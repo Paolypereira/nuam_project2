@@ -186,18 +186,57 @@ Al ingresar verás estas opciones:
 
 **Requiere Docker corriendo.**
 
-**Terminal 1 - Zookeeper + Kafka:**
+text
+## 📡 Kafka (abre terminales adicionales)
 
-docker run -d --name zookeeper -p 2181:2181 zookeeper:3.7
-docker run -d --name kafka -p 9092:9092 --link zookeeper:zookeeper -e KAFKA_ZOOKEEPER_CONNECT=zookeeper:2181 -e KAFKA_ADVERTISED_LISTENERS=PLAINTEXT://localhost:9092 confluentinc/cp-kafka:7.5.0
+Requiere Docker instalado y corriendo.
 
+### Terminal 1 – Ver contenedores existentes (opcional)
 
-**Terminal 2 - Crear topic (una vez):**
+docker ps -a
 
-docker exec kafka kafka-topics --create --topic empresas-events --bootstrap-server localhost:9092 --partitions 1 --replication-factor 1
+text
 
+### Terminal 2 – Crear red y levantar Zookeeper + Kafka
 
-**Error puerto Windows:** `docker rm -f kafka` y repite.
+crear red para Kafka
+
+docker network create kafka-net
+levantar Zookeeper
+
+docker run -d --name zookeeper --network kafka-net -p 2181:2181 zookeeper:3.7
+levantar Kafka
+
+docker run -d --name kafka --network kafka-net -p 9092:9092
+-e KAFKA_ZOOKEEPER_CONNECT=zookeeper:2181
+-e KAFKA_ADVERTISED_LISTENERS=PLAINTEXT://localhost:9092
+confluentinc/cp-kafka:7.5.0
+
+text
+
+Comprobar que están arriba:
+
+docker ps
+
+text
+
+Debe mostrar algo similar a:
+
+- `zookeeper:3.7` en el puerto `2181`
+- `confluentinc/cp-kafka:7.5.0` en el puerto `9092`
+
+### Terminal 3 – Crear el tópico `empresas-events` (solo una vez)
+
+docker exec kafka kafka-topics
+--create
+--topic empresas-events
+--bootstrap-server localhost:9092
+--partitions 1
+--replication-factor 1
+
+text
+
+Después de esto, cada vez que se levante Zookeeper y Kafka, la aplicación NUAM publicará eventos en el tópico `empresas-events` al crear o editar empresas.
 
 ---
 

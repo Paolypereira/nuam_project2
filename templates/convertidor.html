@@ -37,7 +37,7 @@
       e.preventDefault();
       const monto = document.getElementById("monto").value || 0;
       const moneda = document.getElementById("moneda").value;
-      const url = `/convertir-moneda/?monto=${encodeURIComponent(monto)}&moneda=${encodeURIComponent(moneda)}`;
+      const url = `/api/convertir-moneda/?monto=${encodeURIComponent(monto)}&moneda=${encodeURIComponent(moneda)}`;
       fetch(url)
         .then(r => r.json())
         .then(data => {

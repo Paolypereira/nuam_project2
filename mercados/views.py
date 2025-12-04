@@ -50,30 +50,50 @@ def convertidor_view(request):
 
 # -------- API convertidor de moneda (JSON) --------
 def convertir_moneda(request):
-    monto = float(request.GET.get("monto", 0))
+    # Validar monto
+    monto_str = request.GET.get("monto", "").strip()
+    if not monto_str:
+        return JsonResponse({"error": "Debe indicar un monto numérico"}, status=400)
+    try:
+        monto = float(monto_str)
+    except ValueError:
+        return JsonResponse({"error": "El monto debe ser un número válido"}, status=400)
+
     moneda = request.GET.get("moneda", "CLP")  # CLP, PEN, COP, etc.
 
+    # Llamar API externa con manejo de errores
     url = "https://api.exchangerate-api.com/v4/latest/USD"
-    r = requests.get(url, timeout=5)
-    data = r.json()
+    try:
+        r = requests.get(url, timeout=5)
+        r.raise_for_status()
+        data = r.json()
+    except requests.RequestException:
+        return JsonResponse(
+            {"error": "No se pudo contactar la API de tipo de cambio"},
+            status=502,
+        )
 
     rates = data.get("rates", {})
     if moneda not in rates:
-        return JsonResponse({"error": "Moneda no soportada"}, status=400)
+        return JsonResponse(
+            {"error": f"Moneda no soportada: {moneda}"},
+            status=400,
+        )
 
     tasa_moneda = rates[moneda]
     usd_por_moneda = 1 / tasa_moneda
     resultado = monto * usd_por_moneda
 
-    return JsonResponse({
-        "monto": monto,
-        "moneda": moneda,
-        "resultado_usd": round(resultado, 4),
-        "usd_por_moneda": usd_por_moneda,
-        "fecha": data.get("date"),
-        "tasa_base": "USD",
-    })
-
+    return JsonResponse(
+        {
+            "monto": monto,
+            "moneda": moneda,
+            "resultado_usd": round(resultado, 4),
+            "usd_por_moneda": usd_por_moneda,
+            "fecha": data.get("date"),
+            "tasa_base": "USD",
+        }
+    )
 
 # -------- API REST principal (DRF con paginación) --------
 class EmpresaViewSet(viewsets.ModelViewSet):
