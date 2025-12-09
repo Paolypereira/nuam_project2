@@ -33,7 +33,6 @@ El proyecto incluye un **panel administrativo**, una **API funcional**, un **cat
 
 ---
 
-text
 ## 🚀 Instalación y ejecución
 
 ### 1️⃣ Clonar el repositorio
@@ -41,29 +40,25 @@ text
 git clone https://github.com/Paolypereira/nuam_project2.git
 cd nuam_project
 
-text
 
-### 2️⃣ Crear entorno virtual
+## 2️⃣ Crear entorno virtual
 
 **Windows PowerShell:**
 
 python -m venv .venv
 .venv\Scripts\Activate.ps1
 
-text
 
 **Linux / Ubuntu:**
 
 python3 -m venv .venv
 source .venv/bin/activate
 
-text
 
 ⚠️ **En Windows, si aparece error al activar el entorno, ejecuta PowerShell como Administrador y usa:**
 
 Set-ExecutionPolicy RemoteSigned
 
-text
 
 ### 3️⃣ Crear carpeta de logs
 
@@ -72,21 +67,17 @@ Debe crearse manualmente en la raíz del proyecto (donde está `manage.py`):
 
 mkdir logs
 
-text
-
 Django usará esta carpeta para escribir el archivo `logs/django_errors.log`.
 
 ### 4️⃣ Instalar dependencias
 
 pip install -r requirements.txt
 
-text
 
 ### 5️⃣ Aplicar migraciones de base de datos
 
 python manage.py migrate
 
-text
 
 **Error común:** Si falla, elimina `db.sqlite3` y repite el paso.
 
@@ -94,7 +85,6 @@ text
 
 python manage.py createsuperuser
 
-text
 
 Ingresa username, email y password. **Guarda estos datos para login.**
 
@@ -102,7 +92,6 @@ Ingresa username, email y password. **Guarda estos datos para login.**
 
 python manage.py cargar_paises
 
-text
 
 ### 8️⃣ Cargar datos bursátiles desde Excel
 
@@ -110,7 +99,6 @@ El archivo Excel está en:
 
 cargas/2025/10/Informe_Bursatil_Regional_2025-08.xlsx
 
-text
 
 **Pasos para importar:**
 
@@ -119,19 +107,15 @@ text
 
 python manage.py seed_empresas --file "ruta_completa_a_tu_excel.xlsx"
 
-text
 
 **Ejemplo Windows:**
 
 python manage.py seed_empresas --file "C:\Users\TuUsuario\proyecto\cargas\2025\10\Informe_Bursatil_Regional_2025-08.xlsx"
 
-text
 
 El sistema detectará y mostrará resultados como:
 
 ✅ Empresas creadas: 0, actualizadas: 159, omitidas: 72
-
-text
 
 ### 9️⃣ Ejecutar el servidor de desarrollo
 
@@ -139,19 +123,16 @@ text
 
 python manage.py runserver
 
-text
 
 **Linux / Ubuntu:**
 
 python3 manage.py runserver
 
-text
 
 **Verás este mensaje:**
 
 Starting development server at http://127.0.0.1:8000/
 
-text
 
 ### 🔟 **ABRIR EL SITIO EN EL NAVEGADOR**
 
@@ -186,7 +167,7 @@ Al ingresar verás estas opciones:
 
 **Requiere Docker corriendo.**
 
-text
+
 ## 📡 Kafka (abre terminales adicionales)
 
 Requiere Docker instalado y corriendo.
@@ -195,9 +176,7 @@ Requiere Docker instalado y corriendo.
 
 docker ps -a
 
-text
-
-### Terminal 2 – Crear red y levantar Zookeeper + Kafka
+## Terminal 2 – Crear red y levantar Zookeeper + Kafka
 
 crear red para Kafka
 
@@ -212,13 +191,11 @@ docker run -d --name kafka --network kafka-net -p 9092:9092
 -e KAFKA_ADVERTISED_LISTENERS=PLAINTEXT://localhost:9092
 confluentinc/cp-kafka:7.5.0
 
-text
 
 Comprobar que están arriba:
 
 docker ps
 
-text
 
 Debe mostrar algo similar a:
 
@@ -234,11 +211,9 @@ docker exec kafka kafka-topics
 --partitions 1
 --replication-factor 1
 
-text
 
 Después de esto, cada vez que se levante Zookeeper y Kafka, la aplicación NUAM publicará eventos en el tópico `empresas-events` al crear o editar empresas.
 
-text
 ### 🪟 Kafka en Windows (sin Docker, solo desarrollo)
 
 Si se desea probar Kafka localmente en Windows sin usar Docker, se puede utilizar la
@@ -251,7 +226,6 @@ Suponiendo que Kafka fue descomprimido en `C:\kafka\kafka_2.13-3.9.1`, los pasos
 cd C:\kafka\kafka_2.13-3.9.1
 bin\windows\zookeeper-server-start.bat config\zookeeper.properties
 
-text
 
 Dejar esta ventana abierta.
 
@@ -260,7 +234,6 @@ Dejar esta ventana abierta.
 cd C:\kafka\kafka_2.13-3.9.1
 bin\windows\kafka-server-start.bat config\server.properties
 
-text
 
 Con ambas ventanas ejecutándose, Kafka queda disponible en `localhost:9092` y la
 aplicación NUAM puede publicar eventos en el tópico `empresas-events` al crear o
@@ -345,35 +318,54 @@ Estos archivos (`nuam-localhost.crt`, `nuam-localhost.key`) pueden configurarse 
 
 ---
 
-## 🔐 HTTPS básico en entorno local (Windows + certificado autofirmado)
+## 🔐 Ejecución con HTTPS en entorno local (Windows y Linux)
 
-Para demostrar una configuración básica de HTTPS en entorno local, se utiliza un certificado
-autofirmado para `localhost` y el servidor IIS de Windows como frontend:
+Para demostrar una configuración básica de HTTPS en entorno local, se utiliza un
+certificado autofirmado y el comando `runsslserver` de `django-sslserver`.
 
-1. Generar certificado autofirmado para `localhost`:
+### Dependencias
 
-   - Abrir **Windows PowerShell** como Administrador.
-   - Ejecutar:
-     ```
-     New-SelfSignedCertificate -DnsName "localhost" -CertStoreLocation "Cert:\LocalMachine\My"
-     ```
+En `requirements.txt`:
 
-2. Asociar el certificado a un sitio HTTPS en IIS:
+django-sslserver
 
-   - Abrir **Administrador de IIS** (`inetmgr`).
-   - Crear un nuevo sitio (por ejemplo `NUAM-HTTPS`) y configurarlo con un binding HTTPS
-     en el puerto 443 usando el certificado autofirmado `localhost` generado en el paso anterior.
-   - Configurar el sitio para que reenvíe las peticiones HTTPS a la aplicación Django
-     que corre en `http://127.0.0.1:8000/` (reverse proxy).
+undefined
 
-3. Acceder a la aplicación mediante HTTPS:
+En `settings.py`, dentro de `INSTALLED_APPS`:
 
-   - Iniciar el servidor de desarrollo de Django en `http://127.0.0.1:8000/`.
-   - Abrir el navegador en: `https://localhost/` (aceptando la advertencia de certificado
-     autofirmado, solo para uso académico).
+INSTALLED_APPS = [
+...
+"sslserver",
+"mercados",
+]
 
-Esta configuración permite contar con HTTPS básico en entorno local usando un certificado
-autofirmado, suficiente para el criterio de configuración básica de SSL de la rúbrica.
+
+### Windows
+
+python manage.py runsslserver 127.0.0.1:8000
+
+
+Luego abrir en el navegador:
+
+https://127.0.0.1:8000/
+
+
+Aceptar la advertencia del certificado autofirmado.
+
+### Linux / Ubuntu
+
+python manage.py runsslserver 127.0.0.1:8000
+
+
+Y acceder igualmente a:
+
+https://127.0.0.1:8000/
+
+
+Esta ejecución con HTTPS local, más la sección anterior de certificados digitales,
+cumple el criterio de configuración básica de SSL de la rúbrica.
+
+---
 
 ## 📡 Integración con Kafka (Pub/Sub)
 
@@ -400,14 +392,17 @@ logs/
 
 ## 🎓 Sugerencia de recorrido para la evaluación
 
-1. Mostrar el **dashboard** (`/`) con tarjetas activas.  
-2. Navegar el **catálogo** (`/catalogo/`) mostrando importación desde Excel.  
-3. Mostrar el **panel admin** (`/admin/`) con CRUD de Empresas.  
-4. Demostrar la **API** (`/api/empresas/`, `/api/paises/`).  
-5. Explorar la documentación en `/swagger/` y `/redoc/`.  
-6. Ver el diagrama **M.E.R.** (`/mer/`).  
-7. Probar el convertidor en `/convertir-moneda/`.  
-8. Mencionar la integración con Kafka y manejo de logs.
+1. Mostrar el **dashboard** (`/`) con tarjetas activas y el selector de idioma `ES / EN`.
+2. Navegar el **catálogo** (`/catalogo/`) mostrando importación desde Excel.
+3. Mostrar el **panel admin** (`/admin/`) con CRUD de Empresas (usando el superusuario).
+4. Demostrar la **API REST** (`/api/empresas/`, `/api/paises/`, `/api/top-empresas/`).
+5. Explorar la documentación en `/swagger/` y `/redoc/`.
+6. Ver el diagrama **M.E.R.** (`/mer/`).
+7. Probar el **convertidor de moneda** en `/convertir-moneda/`.
+8. Mencionar la integración con **Kafka** (productor y comandos para levantarlo).
+9. Mostrar el **logging** (`logs/django_errors.log`) y el monitoreo con **Sentry** (evento de error).
+10. Ejecutar el proyecto con **HTTPS local** usando `python manage.py runsslserver 127.0.0.1:8000`
+    y acceder a `https://127.0.0.1:8000/` aceptando el certificado autofirmado.
 
 ---
 

@@ -25,7 +25,8 @@ INSTALLED_APPS = [
     "rest_framework",
     "corsheaders",
     "django_filters",
-    "drf_yasg",          # <- Swagger UI / ReDoc
+    "drf_yasg",          # Swagger UI / ReDoc
+    "sslserver",         # HTTPS en desarrollo
 
     # local apps
     "mercados",
