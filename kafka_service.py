@@ -2,6 +2,8 @@
 import json
 from confluent_kafka import Producer
 from kafka_config import KAFKA_BOOTSTRAP_SERVERS, KAFKA_TOPIC_EMPRESAS
+import logging
+from confluent_kafka import Producer
 
 # Crear un solo Producer global (reutilizarlo es buena práctica). [web:177][web:205]
 producer = Producer({"bootstrap.servers": KAFKA_BOOTSTRAP_SERVERS})
@@ -13,3 +15,15 @@ def publicar_evento_empresa(datos: dict):
     producer.produce(KAFKA_TOPIC_EMPRESAS, value=value)
     # flush pequeño para desarrollo; en producción se optimiza. [web:190]
     producer.flush(1)
+
+logger = logging.getLogger(__name__)
+
+producer = Producer({"bootstrap.servers": "localhost:9092"})
+
+def publicar_evento_empresa(data):
+    try:
+        producer.produce("empresas-events", value=data)
+        producer.flush()
+        logger.info("Evento enviado a Kafka: %s", data)
+    except Exception:
+        logger.error("Error al publicar en Kafka", exc_info=True)

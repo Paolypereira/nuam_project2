@@ -1,6 +1,8 @@
 from pathlib import Path
 from django.urls import reverse_lazy
 import os
+import sentry_sdk
+from sentry_sdk.integrations.django import DjangoIntegration
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -117,6 +119,17 @@ LOGGING = {
         },
     },
 }
+
+SENTRY_DSN = os.getenv("SENTRY_DSN", "")
+
+if SENTRY_DSN:
+    sentry_sdk.init(
+        dsn=SENTRY_DSN,
+        integrations=[DjangoIntegration()],
+        traces_sample_rate=0.0,
+        send_default_pii=False,
+        default_integrations=False,  # <- desactiva integraciones globales (incluye SQLAlchemy)
+    )
 
 # Seguridad HTTPS (solo producción)
 SECURE_SSL_REDIRECT = False

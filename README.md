@@ -157,7 +157,7 @@ text
 
 1. Abre Chrome/Firefox/Edge  
 2. Copia y pega: `http://127.0.0.1:8000/`  
-3. **Presiona ENTER** 🎉  
+3. **Presiona ENTER**  
 
 **¡Listo, ya está funcionando!**
 
@@ -238,6 +238,33 @@ text
 
 Después de esto, cada vez que se levante Zookeeper y Kafka, la aplicación NUAM publicará eventos en el tópico `empresas-events` al crear o editar empresas.
 
+text
+### 🪟 Kafka en Windows (sin Docker, solo desarrollo)
+
+Si se desea probar Kafka localmente en Windows sin usar Docker, se puede utilizar la
+distribución oficial de Kafka instalada en el disco.
+
+Suponiendo que Kafka fue descomprimido en `C:\kafka\kafka_2.13-3.9.1`, los pasos son:
+
+#### Terminal 1 – Zookeeper
+
+cd C:\kafka\kafka_2.13-3.9.1
+bin\windows\zookeeper-server-start.bat config\zookeeper.properties
+
+text
+
+Dejar esta ventana abierta.
+
+#### Terminal 2 – Kafka broker
+
+cd C:\kafka\kafka_2.13-3.9.1
+bin\windows\kafka-server-start.bat config\server.properties
+
+text
+
+Con ambas ventanas ejecutándose, Kafka queda disponible en `localhost:9092` y la
+aplicación NUAM puede publicar eventos en el tópico `empresas-events` al crear o
+editar empresas.
 ---
 
 ## 🔌 API RESTful NUAM
@@ -277,6 +304,15 @@ Permite explorar, probar y validar los endpoints directamente.
 
 ---
 
+## 📊 Manejo de errores y monitoreo en tiempo real
+
+Además del logging a archivo (`logs/django_errors.log`), NUAM incluye:
+
+- Manejo de errores en vistas críticas (convertidor de moneda, integración con Kafka) mediante bloques `try/except` y uso de niveles de logging (`INFO`, `WARNING`, `ERROR`), lo que permite registrar tanto errores como situaciones anómalas.
+- Integración con **Sentry** (`sentry-sdk` + `DjangoIntegration`), configurada mediante la variable de entorno `SENTRY_DSN`. Las excepciones no controladas y errores críticos se envían automáticamente al panel web de Sentry, donde pueden visualizarse y analizarse en tiempo (casi) real.
+
+De esta forma, el sistema no solo registra errores en archivos locales, sino que cuenta con monitoreo externo y proactivo para la aplicación NUAM.
+
 ## 🔒 Certificados digitales (entorno local)
 
 Aunque NUAM se ejecuta principalmente en entorno local (`http://127.0.0.1:8000/`), se incluye un procedimiento para
@@ -308,6 +344,36 @@ Estos archivos (`nuam-localhost.crt`, `nuam-localhost.key`) pueden configurarse 
 > válidos emitidos por una autoridad certificadora (por ejemplo, Let’s Encrypt).
 
 ---
+
+## 🔐 HTTPS básico en entorno local (Windows + certificado autofirmado)
+
+Para demostrar una configuración básica de HTTPS en entorno local, se utiliza un certificado
+autofirmado para `localhost` y el servidor IIS de Windows como frontend:
+
+1. Generar certificado autofirmado para `localhost`:
+
+   - Abrir **Windows PowerShell** como Administrador.
+   - Ejecutar:
+     ```
+     New-SelfSignedCertificate -DnsName "localhost" -CertStoreLocation "Cert:\LocalMachine\My"
+     ```
+
+2. Asociar el certificado a un sitio HTTPS en IIS:
+
+   - Abrir **Administrador de IIS** (`inetmgr`).
+   - Crear un nuevo sitio (por ejemplo `NUAM-HTTPS`) y configurarlo con un binding HTTPS
+     en el puerto 443 usando el certificado autofirmado `localhost` generado en el paso anterior.
+   - Configurar el sitio para que reenvíe las peticiones HTTPS a la aplicación Django
+     que corre en `http://127.0.0.1:8000/` (reverse proxy).
+
+3. Acceder a la aplicación mediante HTTPS:
+
+   - Iniciar el servidor de desarrollo de Django en `http://127.0.0.1:8000/`.
+   - Abrir el navegador en: `https://localhost/` (aceptando la advertencia de certificado
+     autofirmado, solo para uso académico).
+
+Esta configuración permite contar con HTTPS básico en entorno local usando un certificado
+autofirmado, suficiente para el criterio de configuración básica de SSL de la rúbrica.
 
 ## 📡 Integración con Kafka (Pub/Sub)
 
